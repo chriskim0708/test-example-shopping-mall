@@ -35,3 +35,53 @@ describe('pick util 단위테스트', () => {
     expect(pick(obj)).toEqual({});
   });
 });
+
+describe('debounce', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+
+    // 시간은 흐르기 때문에 매일 달라짐
+    // 테스트 당시의 시간에 의존하는 테스트의 경우 시간을 고정하지 않으면 테스트가 깨질 수 있다.
+    // setSystemTime으로 시간을 고정하면 일관된 환경에서 테스트 가능
+    vi.setSystemTime(new Date('2023-12-25'));
+  });
+
+  it('특정 시간이 지난 후 함수가 호출된다.', () => {
+    const spy = vi.fn();
+
+    const debouncedFn = debounce(spy, 300);
+
+    debouncedFn();
+
+    vi.advanceTimersByTime(300);
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('연이어 호출해도 마지막 호출 기준으로 지정된 타이머 시간이 지난 경우에만 함수가 호출된다.', () => {
+    const spy = vi.fn();
+
+    const debouncedFn = debounce(spy, 300);
+
+    debouncedFn();
+
+    vi.advanceTimersByTime(200);
+    debouncedFn();
+
+    vi.advanceTimersByTime(100);
+    debouncedFn();
+
+    vi.advanceTimersByTime(200);
+    debouncedFn();
+
+    vi.advanceTimersByTime(300);
+    debouncedFn();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  afterEach(() => {
+    // useFakeTimers mocking 초기화
+    vi.useRealTimers();
+  });
+});
